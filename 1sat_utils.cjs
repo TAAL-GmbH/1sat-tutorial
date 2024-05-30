@@ -153,7 +153,7 @@ async function getNextUTXO(address) {
   return [{
     txid: response.data['result'][0]['tx_hash'],
     vout: response.data['result'][0]['tx_pos'],
-    satoshis: bitcoinToSatoshis(response.data['result']['value']),
+    satoshis: bitcoinToSatoshis(response.data['result'][0]['value']),
   }]
   
 }
