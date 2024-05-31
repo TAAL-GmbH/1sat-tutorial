@@ -1,7 +1,7 @@
 const axios = require('axios');
 const bsv = require('bsv');
 const WHATSONCHAIN_API_TESTNET = 'https://api.whatsonchain.com/v1/bsv/test'
-const TOKENSTUDIO_API = 'https://console.test.taal.com/token-studio/api/v1'
+const TOKENSTUDIO_API = 'https://console.taal.com/token-studio/api/v1'
 const TAAL_API_KEY = "<<YOUR TAAL API KEY HERE>>"
 
 function create_output(projectUid) {
