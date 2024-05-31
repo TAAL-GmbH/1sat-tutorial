@@ -4,7 +4,6 @@ import utils from './1sat_utils.cjs';
 let ISSUER_PRIVATE_KEY;
 let ISSUER_ADDRESS;
 let ISSUER_PUBLIC_KEY;
-const API_KEY = "<<YOUR TAAL API KEY HERE>>"
 let PROJECT_UID;
 let UTXO_LIST;
 let TX_OBJ;
@@ -16,10 +15,13 @@ let jsonResponse;
 let options;
 let faucet_needed = true;
 
+//These are suggested for debugging in case you want to test specific scenarios or cases without having to run everything e.g.
+//const STEPS_TO_TEST =['single', 'collection'] will attempt all the steps
+//But if you are struggling with the creation of the transaction for a standalone token, you may want to test only
+//const STEPS_TO_TEST =['1.1','1.4','1.5', '1.6', '1.7'];
+//Similarly, if single/standalone projects are working fine but you struggle with getting a collection ID, you may want to test
+//const STEPS_TO_TEST =['2.1','2.2','2.3','2.4','2.5'];
 const STEPS_TO_TEST =['single', 'collection'];
-//const STEPS_TO_TEST =['1.1','1.2','1.3','1.4','1.5', '1.6', '1.7'];
-//const STEPS_TO_TEST =['2.1','2.2','2.3','2.4','2.5', '2.6', '2.7', '2.8', '2.9'];
-
 
 const STANDALONE_PROJECT = {projectType :'single', isFungible:true, protocol: 'OneSatOrdinal'}
 const COLLECTION_PROJECT = {projectType :'collection', isFungible:true, protocol: 'OneSatOrdinal'}
@@ -33,14 +35,14 @@ await setupProject();
 if(shouldTestThis('1.1')){
   console.log('\x1b[33m%s\x1b[0m',"Step 1.1 - Create STANDALONE Project")
   await createProject(STANDALONE_PROJECT)
-  .then((jsonResponse ) => { 
-  });  
+  .then((jsonResponse ) => {
+  });
 }
 
 if(shouldTestThis('1.2')){
   //Step 1.2 - get Project Details
   console.log('\x1b[33m%s\x1b[0m',"Step 1.2 - get Project Details")
-  options = utils.REST_options("get_details", API_KEY);
+  options = utils.REST_options("get_details");
   options.path = options.path.replace("{projectUid}", PROJECT_UID)
 
   await utils.REST_request(options, null).then((axiosResponse) => {
@@ -51,7 +53,7 @@ if(shouldTestThis('1.2')){
 if(shouldTestThis('1.3')){
   //Step 1.3 - get list of projects
   console.log('\x1b[33m%s\x1b[0m',"Step 1.3 - get list of projects")
-  await utils.REST_request(utils.REST_options("list_projects", API_KEY)
+  await utils.REST_request(utils.REST_options("list_projects")
   , null).then((axiosResponse) => {
     jsonResponse = axiosResponse.data;})
   checkResponse(jsonResponse,null);
@@ -60,11 +62,11 @@ if(shouldTestThis('1.3')){
 if(shouldTestThis('1.4')){
   //Step 1.4 - create a single output for a standalone token
   console.log('\x1b[33m%s\x1b[0m',"Step 1.4 - create a single output for a standalone token")
-  await createOutput({"type":'single', "id":null}, 
+  await createOutput({"type":'single', "id":null},
   utils.textInscription, 200).then((data) => {
     jsonResponse = data;})
 }
-  
+
 if(shouldTestThis('1.5')){
   //Step 1.5 - get list of project outputs
   console.log('\x1b[33m%s\x1b[0m',"Step 1.5 - get list of project outputs")
@@ -91,7 +93,7 @@ if(shouldTestThis('1.7')){
       TXID = jsonResponse['data']['txId'];
       console.log(TXID);
   }
-  
+
 
 }
 
@@ -105,7 +107,7 @@ if(shouldTestThis('2.1')){
 if(shouldTestThis('2.2')){
   //Step 2.2 - create a collection output
   console.log('\x1b[33m%s\x1b[0m',"Step 2.2 - create a collection output")
-  await createOutput({"type":'collection', "id":null}, 
+  await createOutput({"type":'collection', "id":null},
   utils.imageInscription, 200).then((data) => {
     jsonResponse = data;})
 }
@@ -115,7 +117,7 @@ if(shouldTestThis('2.3')){
   console.log('\x1b[33m%s\x1b[0m',"Step 2.3 - get list of project outputs")
   await getOutputsList().then((data) => {
     jsonResponse = data;})
-    //console.log(jsonResponse['data']['outputList'])  
+    //console.log(jsonResponse['data']['outputList'])
 }
 
 if(shouldTestThis('2.4')){
@@ -141,12 +143,12 @@ if(shouldTestThis('2.5')){
 if(shouldTestThis('2.6')){
   //Step 2.6 - create a collectionItem output
   console.log('\x1b[33m%s\x1b[0m',"Step 2.6 - create a collectionItem output")
-  await createOutput({"type":'collectionItem', "id":null}, 
+  await createOutput({"type":'collectionItem', "id":null},
   utils.textInscription, 200).then((data) => {
     jsonResponse = data;})
 }
 
-  
+
 if(shouldTestThis('2.7')){
   //Step 2.7 - get list of project outputs
   console.log('\x1b[33m%s\x1b[0m',"Step 2.7 - get list of project outputs")
@@ -174,41 +176,41 @@ if(shouldTestThis('2.9')){
   }
 
 }
-  
+
 /*FUNCTIONS*/
 
 async function createProject(
     {projectType :ptype, isFungible:isFung, protocol: prot} ){
-    
-        const options = utils.REST_options("create_project", API_KEY);
+
+        const options = utils.REST_options("create_project");
         let payload = utils.create_project()
         payload ['type'] = ptype
         payload ['isFungible'] = isFung
         payload ['tokenProtocol'] = prot
-    
+
         let postData = JSON.stringify(payload);
         console.log(postData)
-    
+
         let jsonResponse
         await utils.REST_request(options, postData).then((axiosResponse) => {
           jsonResponse = axiosResponse.data;})
-        
+
           PROJECT_UID = jsonResponse['data']['projectUid']
 
         return checkResponse(jsonResponse);
-    
-    }   
-    
+
+    }
+
 
 async function createOutput(outputType, inscription){
-    
-    const options = utils.REST_options("create_output", API_KEY);
+
+    const options = utils.REST_options("create_output");
     let body = utils.create_output();
     body["projectUid"] = PROJECT_UID;
     body["metadata"]["subType"] = outputType["type"];
     body["contentType"] = inscription()['content-type'];
     body["b64File"] = inscription()['content'];
-    
+
     let cid
     if (outputType["type"]!='single'){
       if (outputType["id"]!=null){
@@ -218,20 +220,20 @@ async function createOutput(outputType, inscription){
       }
       body["metadata"]["subTypeData"] = JSON.stringify(
         {"collectionId": `${cid}`, "description":"description123"}
-      )   
+      )
     }
-    
-    
+
+
     let jsonResponse
     await utils.REST_request(options, JSON.stringify(body)).then((axiosResponse) => {
       jsonResponse = axiosResponse.data;})
 
     return checkResponse(jsonResponse);
-    
+
   }
 
   async function getOutputsList(){
-    const options = utils.REST_options("list_outputs", API_KEY);
+    const options = utils.REST_options("list_outputs");
     options.path = options.path.replace("{projectUid}", PROJECT_UID)
     let jsonResponse
     //Reinitialize outputlist
@@ -239,26 +241,23 @@ async function createOutput(outputType, inscription){
 
     await utils.REST_request(options, null).then((axiosResponse) => {
       jsonResponse = axiosResponse.data;})
-      
+
       if(jsonResponse['data']['outputList']){
         for (var i=0; i<jsonResponse['data']['outputList'].length;i++){
           //Add only those outputs that have not been used yet
           if(jsonResponse['data']['outputList'][i]["transactionUid"]==null){
             OUTPUT_LIST.push(jsonResponse['data']['outputList'][i]["uid"]);
-          }  
-          
+          }
         }
-        //console.log(JSON.stringify(jsonResponse));
-  
       }
       return checkResponse(jsonResponse);
   }
 
 
-  
+
   async function createTransaction(){
 
-    const options = utils.REST_options("create_transaction", API_KEY);
+    const options = utils.REST_options("create_transaction");
     let body = utils.create_transaction();
     body["projectUid"] = PROJECT_UID;
     body["publicKey"]  = ISSUER_PUBLIC_KEY;
@@ -271,38 +270,38 @@ async function createOutput(outputType, inscription){
         ISSUER_ADDRESS
       );
       faucet_needed = false;
-  
+
     }else{
       UTXO_LIST = await utils.getNextUTXO(
         ISSUER_ADDRESS
-      );  
+      );
     }
-    
+
 
     for(var i=0; i<UTXO_LIST.length;i++){
-      body["utxoList"][i]["txId"] = UTXO_LIST[i]["txid"];  
-      body["utxoList"][i]["outputIndex"] = UTXO_LIST[i]["vout"];  
+      body["utxoList"][i]["txId"] = UTXO_LIST[i]["txid"];
+      body["utxoList"][i]["outputIndex"] = UTXO_LIST[i]["vout"];
     }
 
     console.log(JSON.stringify(body))
     let jsonResponse
     await utils.REST_request(options, JSON.stringify(body)).then((axiosResponse) => {
       jsonResponse = axiosResponse.data;})
-    
+
     if(jsonResponse['success']){
       TX_OBJ = jsonResponse['data']['txObj'];
       TRANSACTION_UID = jsonResponse['data']['transactionUid'];
       console.log(TRANSACTION_UID)
     }
-    
-    
+
+
     return checkResponse(jsonResponse);
 
-    
+
   }
-  
+
   async function submitTransaction(){
-    const options = utils.REST_options("submit_transaction", API_KEY);
+    const options = utils.REST_options("submit_transaction");
     let body = utils.submit_transaction();
     body["transactionUid"] = TRANSACTION_UID;
     body["tx"] = utils.Transaction(TX_OBJ).sign(ISSUER_PRIVATE_KEY).toString("hex");
@@ -311,8 +310,6 @@ async function createOutput(outputType, inscription){
     await utils.REST_request(options, JSON.stringify(body)).then((axiosResponse) => {
       jsonResponse = axiosResponse.data;})
 
-    
-    //console.log(JSON.stringify(body))
     return checkResponse(jsonResponse, body);
   }
 
