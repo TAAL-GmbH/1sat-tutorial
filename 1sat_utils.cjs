@@ -1,7 +1,7 @@
 const axios = require('axios');
 const bsv = require('bsv');
 const WHATSONCHAIN_API_TESTNET = 'https://api.whatsonchain.com/v1/bsv/test'
-const TOKENSTUDIO_API = 'https://console.taal.com/token-studio/api/v1'
+const TOKENSTUDIO_API = 'https://platform.taal.com/token-studio/api/v1'
 const TAAL_API_KEY = "<<YOUR TAAL API KEY HERE>>"
 
 function create_output(projectUid) {
@@ -115,7 +115,9 @@ async function REST_request(options, postData){
     }
 
 
-    const response = await axios(axiosRequest);
+    const response = await axios(axiosRequest).catch(function (error) {
+        return error.response;
+     });
     return response;
 }
 
