@@ -48,7 +48,7 @@
 							"\r",
 							"\r",
 							"/* Variables */\r",
-							"pm.globals.set(\"host\", \"https://console.test.taal.com/token-studio/api/v1\");\r",
+							"pm.globals.set(\"host\", \"https://platform.taal.com/token-studio/api/v1\");\r",
 							"pm.globals.set(\"outputList\", []); //populated by thet get output list steps\r",
 							"pm.globals.set(\"utxo_outputIndex\", \"\"); //populated by the GetUTXOs steps\r",
 							"pm.globals.set(\"utxo_txId\", \"\"); //populated by the GetUTXOs steps\r",
@@ -991,7 +991,7 @@
 	"variable": [
 		{
 			"key": "env_host",
-			"value": "https://console.test.taal.com/token-studio/api/v1",
+			"value": "https://platform.taal.com/token-studio/api/v1",
 			"type": "string"
 		},
 		{
