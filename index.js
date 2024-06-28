@@ -10,6 +10,7 @@ let TX_OBJ;
 let TRANSACTION_UID;
 let OUTPUT_LIST = [];
 let TXID = '';
+let OUTPUTUID = '';
 let COLLECTION_ID='';
 let jsonResponse;
 let options;
@@ -35,8 +36,8 @@ await setupProject();
 if(shouldTestThis('1.1')){
   console.log('\x1b[33m%s\x1b[0m',"Step 1.1 - Create STANDALONE Project")
   await createProject(STANDALONE_PROJECT)
-  .then((jsonResponse ) => {
-  });
+  .then((jsonResponse ) => { 
+  });  
 }
 
 if(shouldTestThis('1.2')){
@@ -62,10 +63,21 @@ if(shouldTestThis('1.3')){
 if(shouldTestThis('1.4')){
   //Step 1.4 - create a single output for a standalone token
   console.log('\x1b[33m%s\x1b[0m',"Step 1.4 - create a single output for a standalone token")
-  await createOutput({"type":'single', "id":null},
+  await createOutput({"type":'single', "id":null}, 
   utils.textInscription, 200).then((data) => {
+    jsonResponse = data;
+    OUTPUTUID = jsonResponse['data']['uid']
+  })
+}
+
+if(shouldTestThis('1.41')){
+  //Step 1.4 - update a single output for a standalone token
+  console.log('\x1b[33m%s\x1b[0m',"Step 1.41 - update a single output for a standalone token")
+  await updateOutput({"type":'single', "id":null}, 
+  utils.textInscription, OUTPUTUID).then((data) => {
     jsonResponse = data;})
 }
+
 
 if(shouldTestThis('1.5')){
   //Step 1.5 - get list of project outputs
@@ -93,7 +105,7 @@ if(shouldTestThis('1.7')){
       TXID = jsonResponse['data']['txId'];
       console.log(TXID);
   }
-
+  
 
 }
 
@@ -107,7 +119,7 @@ if(shouldTestThis('2.1')){
 if(shouldTestThis('2.2')){
   //Step 2.2 - create a collection output
   console.log('\x1b[33m%s\x1b[0m',"Step 2.2 - create a collection output")
-  await createOutput({"type":'collection', "id":null},
+  await createOutput({"type":'collection', "id":null}, 
   utils.imageInscription, 200).then((data) => {
     jsonResponse = data;})
 }
@@ -117,7 +129,7 @@ if(shouldTestThis('2.3')){
   console.log('\x1b[33m%s\x1b[0m',"Step 2.3 - get list of project outputs")
   await getOutputsList().then((data) => {
     jsonResponse = data;})
-    //console.log(jsonResponse['data']['outputList'])
+    //console.log(jsonResponse['data']['outputList'])  
 }
 
 if(shouldTestThis('2.4')){
@@ -143,12 +155,12 @@ if(shouldTestThis('2.5')){
 if(shouldTestThis('2.6')){
   //Step 2.6 - create a collectionItem output
   console.log('\x1b[33m%s\x1b[0m',"Step 2.6 - create a collectionItem output")
-  await createOutput({"type":'collectionItem', "id":null},
+  await createOutput({"type":'collectionItem', "id":null}, 
   utils.textInscription, 200).then((data) => {
     jsonResponse = data;})
 }
 
-
+  
 if(shouldTestThis('2.7')){
   //Step 2.7 - get list of project outputs
   console.log('\x1b[33m%s\x1b[0m',"Step 2.7 - get list of project outputs")
@@ -176,41 +188,41 @@ if(shouldTestThis('2.9')){
   }
 
 }
-
+  
 /*FUNCTIONS*/
 
 async function createProject(
     {projectType :ptype, isFungible:isFung, protocol: prot} ){
-
+    
         const options = utils.REST_options("create_project");
-        let payload = utils.create_project()
+        let payload = utils.createProjectBody()
         payload ['type'] = ptype
         payload ['isFungible'] = isFung
         payload ['tokenProtocol'] = prot
-
+    
         let postData = JSON.stringify(payload);
         console.log(postData)
-
+    
         let jsonResponse
         await utils.REST_request(options, postData).then((axiosResponse) => {
           jsonResponse = axiosResponse.data;})
-
+        
           PROJECT_UID = jsonResponse['data']['projectUid']
 
         return checkResponse(jsonResponse);
-
-    }
-
+    
+    }   
+    
 
 async function createOutput(outputType, inscription){
-
+    
     const options = utils.REST_options("create_output");
-    let body = utils.create_output();
+    let body = utils.createOutputBody();
     body["projectUid"] = PROJECT_UID;
     body["metadata"]["subType"] = outputType["type"];
     body["contentType"] = inscription()['content-type'];
     body["b64File"] = inscription()['content'];
-
+    
     let cid
     if (outputType["type"]!='single'){
       if (outputType["id"]!=null){
@@ -220,17 +232,38 @@ async function createOutput(outputType, inscription){
       }
       body["metadata"]["subTypeData"] = JSON.stringify(
         {"collectionId": `${cid}`, "description":"description123"}
-      )
+      )   
     }
-
-
+    
+    
     let jsonResponse
     await utils.REST_request(options, JSON.stringify(body)).then((axiosResponse) => {
       jsonResponse = axiosResponse.data;})
 
     return checkResponse(jsonResponse);
-
+    
   }
+
+  async function updateOutput(outputType, inscription, outputUid){
+  
+    const options = utils.REST_options("update_output");
+    options['path'] = options['path'].replace("{{OUTPUTUID}}", outputUid);
+    let body = utils.updateOutputBody();
+    body["contentType"] = inscription()['content-type'];
+    body["b64File"] = inscription()['content'];
+    
+    
+    
+    let json_response
+    await utils.REST_request(options, JSON.stringify(body)).then((axiosResponse) => {
+      json_response = axiosResponse.data;})
+  
+  
+    return json_response
+    
+  }
+  
+  
 
   async function getOutputsList(){
     const options = utils.REST_options("list_outputs");
@@ -241,7 +274,7 @@ async function createOutput(outputType, inscription){
 
     await utils.REST_request(options, null).then((axiosResponse) => {
       jsonResponse = axiosResponse.data;})
-
+      
       if(jsonResponse['data']['outputList']){
         for (var i=0; i<jsonResponse['data']['outputList'].length;i++){
           //Add only those outputs that have not been used yet
@@ -254,11 +287,11 @@ async function createOutput(outputType, inscription){
   }
 
 
-
+  
   async function createTransaction(){
 
     const options = utils.REST_options("create_transaction");
-    let body = utils.create_transaction();
+    let body = utils.createTransactionBody();
     body["projectUid"] = PROJECT_UID;
     body["publicKey"]  = ISSUER_PUBLIC_KEY;
     body["dstAddress"] = ISSUER_ADDRESS;
@@ -270,39 +303,39 @@ async function createOutput(outputType, inscription){
         ISSUER_ADDRESS
       );
       faucet_needed = false;
-
+  
     }else{
       UTXO_LIST = await utils.getNextUTXO(
         ISSUER_ADDRESS
-      );
+      );  
     }
-
+    
 
     for(var i=0; i<UTXO_LIST.length;i++){
-      body["utxoList"][i]["txId"] = UTXO_LIST[i]["txid"];
-      body["utxoList"][i]["outputIndex"] = UTXO_LIST[i]["vout"];
+      body["utxoList"][i]["txId"] = UTXO_LIST[i]["txid"];  
+      body["utxoList"][i]["outputIndex"] = UTXO_LIST[i]["vout"];  
     }
 
     console.log(JSON.stringify(body))
     let jsonResponse
     await utils.REST_request(options, JSON.stringify(body)).then((axiosResponse) => {
       jsonResponse = axiosResponse.data;})
-
+    
     if(jsonResponse['success']){
       TX_OBJ = jsonResponse['data']['txObj'];
       TRANSACTION_UID = jsonResponse['data']['transactionUid'];
       console.log(TRANSACTION_UID)
     }
-
-
+    
+    
     return checkResponse(jsonResponse);
 
-
+    
   }
-
+  
   async function submitTransaction(){
     const options = utils.REST_options("submit_transaction");
-    let body = utils.submit_transaction();
+    let body = utils.submitTransactionBody();
     body["transactionUid"] = TRANSACTION_UID;
     body["tx"] = utils.Transaction(TX_OBJ).sign(ISSUER_PRIVATE_KEY).toString("hex");
         
