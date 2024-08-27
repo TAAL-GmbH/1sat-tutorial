@@ -10,7 +10,7 @@ let TX_OBJ;
 let TRANSACTION_UID;
 let OUTPUT_LIST = [];
 let TXID = '';
-let OUTPUTUID = '';
+let OUTPUT_UID = '';
 let COLLECTION_ID='';
 let jsonResponse;
 let options;
@@ -66,7 +66,7 @@ if(shouldTestThis('1.4')){
   await createOutput({"type":'single', "id":null}, 
   utils.textInscription, 200).then((data) => {
     jsonResponse = data;
-    OUTPUTUID = jsonResponse['data']['uid']
+    OUTPUT_UID = jsonResponse['data']['uid']
   })
 }
 
@@ -74,8 +74,25 @@ if(shouldTestThis('1.41')){
   //Step 1.4 - update a single output for a standalone token
   console.log('\x1b[33m%s\x1b[0m',"Step 1.41 - update a single output for a standalone token")
   await updateOutput({"type":'single', "id":null}, 
-  utils.textInscription, OUTPUTUID).then((data) => {
+  utils.textInscription, OUTPUT_UID).then((data) => {
     jsonResponse = data;})
+}
+
+if(shouldTestThis('1.42')){
+  //Step 1.42 - delete a single output for a standalone token
+  console.log('\x1b[33m%s\x1b[0m',"Step 1.42 - delete a single output for a standalone token")
+  await deleteOutput(OUTPUT_UID).then((data) => {
+    jsonResponse = data;})
+}
+
+if(shouldTestThis('1.43')){
+  //Step 1.43 - create a new single output for a standalone token
+  console.log('\x1b[33m%s\x1b[0m',"Step 1.43 - create a new single output for a standalone token")
+  await createOutput({"type":'single', "id":null},
+  utils.textInscription, 200).then((data) => {
+    jsonResponse = data;
+    OUTPUT_UID = jsonResponse['data']['uid']
+  })
 }
 
 
@@ -162,9 +179,9 @@ if(shouldTestThis('2.6')){
 
   
 if(shouldTestThis('2.7')){
-  //Step 2.7 - get list of project outputs
-  console.log('\x1b[33m%s\x1b[0m',"Step 2.7 - get list of project outputs")
-  await getOutputsList().then((data) => {
+  //Step 2.7 - get list of project outputs not yet on chain
+  console.log('\x1b[33m%s\x1b[0m',"Step 2.7 - get list of project outputs not yet on chain")
+  await getOutputsList(0).then((data) => {
     jsonResponse = data;})
 }
 
@@ -188,7 +205,16 @@ if(shouldTestThis('2.9')){
   }
 
 }
-  
+
+if(shouldTestThis('2.91')){
+  //Step 2.91 - get list of project outputs not yet on chain
+  console.log('\x1b[33m%s\x1b[0m',"Step 2.91 - get list of project outputs already on chain")
+  await getOutputsList(1).then((data) => {
+    jsonResponse = data;})
+}
+
+
+
 /*FUNCTIONS*/
 
 async function createProject(
@@ -244,10 +270,10 @@ async function createOutput(outputType, inscription){
     
   }
 
-  async function updateOutput(outputType, inscription, outputUid){
+  async function updateOutput(outputType, inscription){
   
     const options = utils.REST_options("update_output");
-    options['path'] = options['path'].replace("{{OUTPUTUID}}", outputUid);
+    options['path'] = options['path'].replace("{{OUTPUT_UID}}", OUTPUT_UID);
     let body = utils.updateOutputBody();
     body["contentType"] = inscription()['content-type'];
     body["b64File"] = inscription()['content'];
@@ -259,15 +285,33 @@ async function createOutput(outputType, inscription){
       json_response = axiosResponse.data;})
   
   
-    return json_response
+    return checkResponse(jsonResponse);
     
   }
-  
+
+  async function deleteOutput(){
+
+    const options = utils.REST_options("delete_output");
+    options['path'] = options['path'].replace("{{OUTPUT_UID}}", OUTPUT_UID);
+
+    let json_response
+    await utils.REST_request(options, null).then((axiosResponse) => {
+      json_response = axiosResponse.data;})
+
+
+    return checkResponse(jsonResponse);
+
+  }
+
   
 
-  async function getOutputsList(){
+  async function getOutputsList(onchain){
     const options = utils.REST_options("list_outputs");
-    options.path = options.path.replace("{projectUid}", PROJECT_UID)
+    options.path = options.path.replace("{{projectUid}}", PROJECT_UID)
+    if(onchain != null){
+        const filter = `?onchain=${onchain}&type=collectionItem`
+        options.path += filter
+    }
     let jsonResponse
     //Reinitialize outputlist
     OUTPUT_LIST = [];

@@ -1,7 +1,9 @@
 const axios = require('axios');
 const bsv = require('bsv');
-const TOKENSTUDIO_API = 'https://console.taal.com/token-studio/api/v1'
+const TOKENSTUDIO_API = 'https://platform.taal.com/token-studio/api/v1'
 const TAAL_API_KEY = "<<YOUR TAAL API KEY HERE>>"
+const WHATSONCHAIN_API_TESTNET = "https://api.whatsonchain.com/v1/bsv/test"
+
 
 function createOutputBody(projectUid) {
   const timestamp = new Date().getTime().toString()
@@ -52,7 +54,7 @@ function createProjectBody() {
   const timestamp = new Date().getTime().toString()
   const body = {
     "name": `1satcol project ${timestamp}`,
-    "isFungible": true,
+    "isFungible": false,
     // "type": "collection",
     "type": "single",
     "tokenProtocol": "OneSatOrdinal"
@@ -109,11 +111,15 @@ function REST_options(step) {
       options['path'] = '/token/one-sat-ord/create-output';
       break;
     case "update_output":
-      options['path'] = '/token/one-sat-ord/update-output/{{OUTPUTUID}}';
+      options['path'] = '/token/one-sat-ord/update-output/{{OUTPUT_UID}}';
       options['method'] = 'PUT';
-
+      break;
+    case "delete_output":
+      options['path'] = '/output/{{OUTPUT_UID}}';
+      options['method'] = 'DELETE';
+      break;
     case "list_outputs":
-      options['path'] = '/project/{projectUid}/output-list';
+      options['path'] = '/output/by-project/{{projectUid}}';
       options['method'] = 'GET';
       break;
     case "list_projects":
@@ -142,8 +148,7 @@ async function REST_request(options, postData){
     if(options.method == "POST"){
       axiosRequest.data = postData
     }
-    
-    
+
     const response = await axios(axiosRequest).catch(function (error) {
       return error.response;
     });;
