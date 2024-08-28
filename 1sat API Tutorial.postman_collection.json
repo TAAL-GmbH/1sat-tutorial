@@ -309,7 +309,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"contentType\": \"text/plain\",\r\n  \"b64File\": \"....\",\r\n  \"metadata\": {\r\n    //Mandatory\r\n    \"name\": \"My single token 11111111\",\r\n    //Optional  anything except app, type, subType and subTypeData\r\n    \"hair\": \"blue\",\r\n    \"eyes\": \"brown\"\r\n    // not allowed, app, type, subType and subTypeData\r\n  }\r\n}\r\n//you can omit b64File and/or contentType. in this case only metadata will be updated",
+					"raw": "",
 					"options": {
 						"raw": {
 							"language": "json"
